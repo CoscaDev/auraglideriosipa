@@ -1,0 +1,9 @@
+{
+  "name": "Remix: iosMVPAuraGlider",
+  "description": "A clinically-informed anxiety management app that integrates wearable data with biofeedback breathing exercises.",
+  "requestFramePermissions": [
+    "microphone",
+    "bluetooth",
+    "publickey-credentials-create"
+  ]
+}
