@@ -3,19 +3,16 @@
 
 workflows:
   ios-native-build:
-    name: Aura Glider iOS Build
+    name: Aura Glider iOS Build (IPA)
     instance_type: mac_mini_m1
     max_build_duration: 60
     environment:
       node: latest
       xcode: latest
       vars:
-        # You will need to add these in Codemagic UI:
-        # APP_STORE_CONNECT_KEY_IDENTIFIER: YOUR_KEY_ID
-        # APP_STORE_CONNECT_ISSUER_ID: YOUR_ISSUER_ID
-        # APP_STORE_CONNECT_PRIVATE_KEY: YOUR_PRIVATE_KEY
         XCODE_PROJECT: "ios/App/App.xcodeproj"
         XCODE_SCHEME: "App"
+        BUNDLE_ID: "com.auraglider.app"
     scripts:
       - name: Install dependencies
         script: npm install
@@ -25,16 +22,41 @@ workflows:
         script: |
           npx cap add ios || true
           npx cap sync ios
-      - name: Build iOS IPA
+      - name: Set up signing and build IPA
         script: |
-          # Use codemagic-cli to fetch signing files (if configured)
-          # app-store-connect fetch-signing-files "com.auraglider.app" --type IOS_APP_STORE
+          # 1. Fetch signing files from App Store Connect
+          app-store-connect fetch-signing-files "$BUNDLE_ID" --type IOS_APP_STORE --install
           
-          # Actual build command
+          # 2. Configure Xcode to use the fetched profiles (generates export_options.plist)
+          xcode-project use-profiles
+          
+          # 3. Build the IPA
           xcode-project build-ipa --project "$XCODE_PROJECT" --scheme "$XCODE_SCHEME"
     artifacts:
       - build/ios/ipa/*.ipa
-      - ios/App/App.xcodeproj
+      - /tmp/xcodebuild_logs/*.log
+
+  android-native-build:
+    name: Aura Glider Android Build (APK)
+    instance_type: mac_mini_m1
+    max_build_duration: 30
+    environment:
+      node: latest
+    scripts:
+      - name: Install dependencies
+        script: npm install
+      - name: Build web application
+        script: npm run build
+      - name: Capacitor Sync
+        script: |
+          npx cap add android || true
+          npx cap sync android
+      - name: Build Android APK
+        script: |
+          cd android
+          ./gradlew assembleDebug
+    artifacts:
+      - android/app/build/outputs/apk/debug/*.apk
 
   web-build:
     name: Web Application Build
