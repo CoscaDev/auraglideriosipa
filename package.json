@@ -7,11 +7,16 @@
     "dev": "tsx server.ts",
     "start": "tsx server.ts",
     "build": "vite build",
+    "cap-sync": "npx build && npx cap sync",
+    "mobile-build": "npm run build && npx cap copy ios",
     "preview": "vite preview",
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit"
   },
   "dependencies": {
+    "@capacitor/cli": "^8.3.1",
+    "@capacitor/core": "^8.3.1",
+    "@capacitor/ios": "^8.3.1",
     "@huggingface/transformers": "^4.0.1",
     "@tailwindcss/vite": "^4.1.14",
     "@types/three": "^0.183.1",
