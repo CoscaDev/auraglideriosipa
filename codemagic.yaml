@@ -14,7 +14,7 @@ workflows:
         # APP_STORE_CONNECT_KEY_IDENTIFIER: YOUR_KEY_ID
         # APP_STORE_CONNECT_ISSUER_ID: YOUR_ISSUER_ID
         # APP_STORE_CONNECT_PRIVATE_KEY: YOUR_PRIVATE_KEY
-        XCODE_WORKSPACE: "ios/App/App.xcworkspace"
+        XCODE_PROJECT: "ios/App/App.xcodeproj"
         XCODE_SCHEME: "App"
     scripts:
       - name: Install dependencies
@@ -31,10 +31,10 @@ workflows:
           # app-store-connect fetch-signing-files "com.auraglider.app" --type IOS_APP_STORE
           
           # Actual build command
-          xcode-project build-ipa --workspace "$XCODE_WORKSPACE" --scheme "$XCODE_SCHEME"
+          xcode-project build-ipa --project "$XCODE_PROJECT" --scheme "$XCODE_SCHEME"
     artifacts:
       - build/ios/ipa/*.ipa
-      - ios/App/App.xcworkspace
+      - ios/App/App.xcodeproj
 
   web-build:
     name: Web Application Build
