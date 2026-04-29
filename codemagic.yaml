@@ -2,8 +2,30 @@
 # To build for native iOS, you would normally add Capacitor to this project.
 
 workflows:
-  ios-native-build:
-    name: Aura Glider iOS Build (IPA)
+  android-debug-apk:
+    name: Aura Glider Android APK (Debug/Fast)
+    instance_type: mac_mini_m1
+    max_build_duration: 30
+    environment:
+      node: latest
+    scripts:
+      - name: Install dependencies
+        script: npm install
+      - name: Build web application
+        script: npm run build
+      - name: Capacitor Sync
+        script: |
+          npx cap add android || true
+          npx cap sync android
+      - name: Build Android APK
+        script: |
+          cd android
+          ./gradlew assembleDebug
+    artifacts:
+      - android/app/build/outputs/apk/debug/*.apk
+
+  ios-ipa-build:
+    name: Aura Glider iOS IPA (Requires Apple Keys)
     instance_type: mac_mini_m1
     max_build_duration: 60
     environment:
@@ -24,42 +46,21 @@ workflows:
           npx cap sync ios
       - name: Set up signing and build IPA
         script: |
-          # 1. Fetch signing files (Requires APP_STORE_CONNECT_* vars in Codemagic UI)
+          if [ -z "$APP_STORE_CONNECT_ISSUER_ID" ]; then
+            echo "❌ ERROR: APP_STORE_CONNECT_ISSUER_ID is not set in Codemagic Environment Variables."
+            echo "Go to Codemagic UI -> Environment Variables to add your Apple API keys."
+            exit 1
+          fi
+          
+          # Fetch and install certificates
           app-store-connect fetch-signing-files "$BUNDLE_ID" --type IOS_APP_STORE
-          
-          # 2. Install certificates into the keychain
           keychain add-certificates
-          
-          # 3. Configure Xcode to use the fetched profiles
           xcode-project use-profiles
           
-          # 4. Build the IPA
+          # Build IPA
           xcode-project build-ipa --project "$XCODE_PROJECT" --scheme "$XCODE_SCHEME"
     artifacts:
       - build/ios/ipa/*.ipa
-      - /tmp/xcodebuild_logs/*.log
-
-  android-native-build:
-    name: Aura Glider Android Build (APK)
-    instance_type: mac_mini_m1
-    max_build_duration: 30
-    environment:
-      node: latest
-    scripts:
-      - name: Install dependencies
-        script: npm install
-      - name: Build web application
-        script: npm run build
-      - name: Capacitor Sync
-        script: |
-          npx cap add android || true
-          npx cap sync android
-      - name: Build Android APK
-        script: |
-          cd android
-          ./gradlew assembleDebug
-    artifacts:
-      - android/app/build/outputs/apk/debug/*.apk
 
   web-build:
     name: Web Application Build
