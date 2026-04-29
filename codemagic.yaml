@@ -24,13 +24,16 @@ workflows:
           npx cap sync ios
       - name: Set up signing and build IPA
         script: |
-          # 1. Fetch signing files from App Store Connect
-          app-store-connect fetch-signing-files "$BUNDLE_ID" --type IOS_APP_STORE --install
+          # 1. Fetch signing files (Requires APP_STORE_CONNECT_* vars in Codemagic UI)
+          app-store-connect fetch-signing-files "$BUNDLE_ID" --type IOS_APP_STORE
           
-          # 2. Configure Xcode to use the fetched profiles (generates export_options.plist)
+          # 2. Install certificates into the keychain
+          keychain add-certificates
+          
+          # 3. Configure Xcode to use the fetched profiles
           xcode-project use-profiles
           
-          # 3. Build the IPA
+          # 4. Build the IPA
           xcode-project build-ipa --project "$XCODE_PROJECT" --scheme "$XCODE_SCHEME"
     artifacts:
       - build/ios/ipa/*.ipa
